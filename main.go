@@ -230,7 +230,6 @@ func main() {
 	}
 
 	h, err := handler.NewHandler(
-
 		svc.Client(),
 		db,
 		cfg.App.FnsAddress,
@@ -248,7 +247,15 @@ func main() {
 	if err = micro.RegisterSubscriber(
 		cfg.App.MainTopic,
 		svc.Server(),
-		h.Subscriber,
+		h.MainSubscriber,
+		server.SubscriberGroup(appName),
+	); err != nil {
+		logger.Fatalf(ctx, "failed to register subscriber: %v", err)
+	}
+	if err = micro.RegisterSubscriber(
+		cfg.App.ErrorTopic,
+		svc.Server(),
+		h.ErrorSubscriber,
 		server.SubscriberGroup(appName),
 	); err != nil {
 		logger.Fatalf(ctx, "failed to register subscriber: %v", err)
