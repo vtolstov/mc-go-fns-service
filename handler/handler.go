@@ -24,7 +24,13 @@ func (h *Handler) moveToErrorTopic(ctx context.Context, msg interface{}) {
 	}
 }
 
-func (h *Handler) Subscriber(ctx context.Context, msg *pb.InnMsg) error {
+func (h *Handler) ErrorSubscriber(ctx context.Context, msg *pb.InnMsg) error {
+	logger.Infof(ctx, "message from error topic: %v", msg)
+	return nil
+}
+
+
+func (h *Handler) MainSubscriber(ctx context.Context, msg *pb.InnMsg) error {
 	logger.Debugf(ctx, "msg processing start")
 
 	if err := msg.Validate(); err != nil {
