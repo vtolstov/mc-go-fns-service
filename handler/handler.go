@@ -9,7 +9,7 @@ import (
 	logger "go.unistack.org/micro/v3/logger"
 )
 
-var query = "update info set inn=$2 where id=$1"
+var query = "update info set inn=$2 where id=$1 returnin id"
 
 type Handler struct {
 	inn        pb.InnServiceClient
@@ -33,17 +33,20 @@ func (h *Handler) Subscriber(ctx context.Context, msg *pb.InnMsg) error {
 		return nil
 	}
 
-	rsp, err := h.inn.GetInn(ctx, &pb.GetInnReq{})
+	rsp, err := h.inn.GetInn(ctx, &pb.GetInnReq{FirstName: msg.FirstName})
 	if err != nil {
 		logger.Errorf(ctx, "inn call err: %v", err)
 		h.moveToErrorTopic(ctx, msg)
 		return nil
 	}
 
-	if _, err = h.db.ExecContext(ctx, query, msg.Id, rsp.Inn); err != nil {
+	var id int64
+	if _, err = h.db.GetContext(ctx, &id, query, msg.Id, rsp.Inn); err != nil {
 		logger.Fatalf(ctx, "failed to exec query: %v", err)
+	} else if id == 0 {
+		logger.Info(ctx, "no rows updated")	
 	}
-
+	
 	logger.Debugf(ctx, "msg processing complete")
 
 	return nil
